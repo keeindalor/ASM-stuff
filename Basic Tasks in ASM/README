@@ -1,0 +1,59 @@
+Ionut Cristian Savu, 322 CB
+--Tema 2--
+
+Feedback: Aceasta tema a evaluat cunostintele de baza ale limbajului de asamblare (cries in EEX);
+        A fost o tema misto, mi-a placut sa ma pierd in registre si in partile acestora, iar daca
+        mi-as fi organizat timpul mai bine, as fi facut si task 4 (ups)
+
+Task 1: ROTP
+- acest task a fost cel mai simplu, si totodata, mi-a luat cel mai mult pentru a-l rezolva
+-algoritmul este urmatorul: cu un index, se parcurge string-ul, si se face un xor intre litera 
+din string si litera din key corespunzatoare (adica in functie de index, de la coada la cap)
+-rezultatul se memoreaza in variabila ciphertext
+-in limbaj de asamblare, in bl (care contine bitii necesari unui caracter), salvam litera
+dupa care facem xor cu litera din key, si salvam in edx (registrul ciphertext), dupa care 
+adaugam cate un 1 lui esi si edx (registrele pt plaintext si ciphertext), si scadem 1 lui ecx
+caci sub verifica si daca valoarea e mai mare decat 0, si decrementeaza lungimea lui key
+-nu ne afecteaza cu nimic daca modificam lungimea, caci pentru ciphertext si plaintext avansam o pozitie
+cat timp suntem in bucla, iar bulca se termina atunci cand lungimea ajunge la 0
+
+Task 2: Ages
+- In acest task, trebuia sa calculam varsta unui individ in functie de data curenta
+-Ideea algoritmului este urmatorul: parcurgem vectorul de varste, si verificam intai anul
+-Daca an_curent < an_vector, trecem 0. Daca an_curent >= an_vector, scadem din cel curent pe cel din vector
+si verificam luna.
+-Daca luna curenta < luna vector, scadem 1 din an si aceea este varsta. Daca luna curent = luna vector, verificam si zilele
+-Daca ziua curenta < ziua vector, scadem 1 si aceea este varsta finala. Ideea este ca scadem 1 doar atunci cand
+mai sunt luni/zile pana la cele curente
+-In limbaj de asamblare, in eax memoram val anului curent, din care vom scadea valoarea anului din vector din pozitia respectiva
+-folosesc sub, pentru a verifica si conditia de mai mic sau egal (cazurile pentru acelasi an sau persoana nenascuta)
+-dupa aceea, daca nu a intrat in label-ul pentru erori, va verifica luna. Daca luna curenta e mai mica decat
+cea din vector, scadem un an, pe label-ul sub_year. Daca e egal, trecem pe label-ul check_day unde facem acelasi lucru
+pentru zi, asemenea lunilor. In fiecare label ne mutam o pozitie in ecx (vectorul final de varste, adaugam 4) si o pozitie in
+vectorul de structuri (edi, adaugam 8 datorita size-ului), il scadem pe edx (care este lungimea vectorului si pe care il folosim ca si
+conditie de iesire din bucla), si daca nu e 0, continuam bucla, altfel sarim peste toate label-urile
+si mergem la sfarsit
+
+Task 3: Columnar
+-In acest task, trebuie sa codam un string in functie de lungimea unei chei si elementele unui vector de referinta;
+-Matricea in care este adaugat textul plain este de dimensiuni lungime_cheie coloane si (lungime_plain/lungime_cheie + 1) linii
+-Astfel, valorile din vectorul de referinta reprezinta coloanele in ordinea care se va coda plain-ul.
+-Conform exemplului de pe site (conform caruia mi-am construit algoritmul), procedam astfel. Daca ma pozitionez pe coloana key[i], 
+si pornesc de pe linia 1 din acea coloana, eu adaug litera cu litera ceea ce este pe pozitia (1,key[i]), (2,key[i]) samd. Dar eu avand
+un string (plaintext), eu nu am o matrice. Si astfel, de la prima litera corespunzatoare pana la final, adaug lungimea 
+cheii in valoarea lui key[i] de atatea ori cat sa nu depasesc lungimea haystack-ului 
+(ceea ce verifica numarul de linii, adica lungime_plain/l_cheie + 1)
+-Acest algoritm se repeta de atatea ori cat are key-ul lungimea, pentru a acoperi toate coloanele din matrice
+-In limbaj de asamblare, am stocat in ecx lungimea cheii (adica lungimea vectorului)
+-Am o bucla principala, care ar reprezenta for-ul pana la finalul vectorului de referinta
+-In acea bucla principala, memorez vectorul de referinta, key, si compar valoarea de pe pozitia respectiva cu lungimea
+haystack-ului (adica a stringului, pentru a nu depasi marginea, valoare in care vom adauga ulterior lungimea cheii pentru 
+a putea acoperi toate literele haystack-ului)
+-Daca e mai mica, ne ducem la label-ul de criptare, in care luam litera haystack-ului de pe pozitia memorata in eax, si,
+folosind partea dl din edx, vom adauga in final in ebx (care reprezinta registrul ciphertextului).
+-adaugam 1 registrului ebx pentru a avansa in string, precum si lungimea cheii in eax pentru a acoperi urmatoarea linie din
+coloana cheii
+-APoi, vom compara valoarea din eax cu lungimea haystack, iar daca este mai mica, vom continua algoritmul pentru a acoperi
+intraga coloana, altfel, vom merge la label-ul advance
+-labelul advance doar va avansa in vectorul key cu o pozitie, il va scadea pe ecx (in care am memorat lungimea cheii, pentru
+a stii cati pasi vom face), iar daca lungimea e diferita de 0, continuam algoritmul. Altfel, ne oprim
